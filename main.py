@@ -1,27 +1,39 @@
-from opentele.td import TDesktop
+from threading import Thread
 from opentele.tl import TelegramClient
 from opentele.api import API, UseCurrentSession
 import asyncio
 import os
 import logging
-import requests
-import socks
+import time
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-async def main(session_name, proxy_index):
+
+async def main(session_name):
     
-    # Load the client from telethon.session file
-    # We don't need to specify api, api_id or api_hash, it will use TelegramDesktop API by default.
     session_path = os.path.join('sessions', session_name)
     api = API.TelegramDesktop.Generate()
-    client = TelegramClient(session_path)
-    
-    # flag=UseCurrentSession
-    # Convert Telethon to TDesktop using the current session.
-    tdesk = await client.ToTDesktop(flag=UseCurrentSession, )
-    
-    # Save the session to a folder named "tdata"
-    tdesk.SaveTData(session_name)
+    client = TelegramClient(session_path, api)
 
-asyncio.run(main('telegram.session'))
+    tdesk = await client.ToTDesktop(flag=UseCurrentSession, api=api)
+    
+    tdesk.SaveTData(os.path.join('tdatas', f"tdata{session_name.split('.')[0]}"))
+
+def start_func(session_name):
+    asyncio.run(main(session_name))
+
+def start():
+    session_names = os.listdir("./sessions")
+    for session_name in session_names:
+        logging.info(f'Начал {session_name}')
+        t = Thread(
+                target=start_func,
+                args=(
+                    session_name,
+                ),
+            )
+        t.start()
+        time.sleep(1)
+        logging.info(f'Закончил {session_name}')
+    
+start()
