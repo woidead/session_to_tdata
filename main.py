@@ -5,6 +5,7 @@ import asyncio
 import os
 import logging
 import requests
+import socks
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -25,9 +26,15 @@ class Proxy:
     Methods:
         get_proxy(index): Возвращает параметры прокси-сервера в зависимости от типа.
     """
-    def __init__(self, proxy_type:int, proxy_file:str):
+
+    def __init__(self, proxy_type:int):
         self.proxy_type = int(proxy_type)
-        self.proxy_file = proxy_file
+        self.proxy_file = self.get_proxy_file()
+
+    def get_proxy_file(self):
+        with open("proxy.txt", 'r') as proxy_data:
+            proxy_file = proxy_data.read().strip()
+            return proxy_file
 
     def fetch_proxy_from_link(self, link, index):
         proxies = requests.get(link)
@@ -75,7 +82,18 @@ class Proxy:
 
 
 
-async def main(session_name):
+async def main(session_name, proxy_index):
+    proxy = Proxy(0)
+    proxy.get_proxy(proxy_index)
+    if len(proxy.get_proxy(proxy_index)) == 4:
+        addr, port, username, password = proxy.get_proxy(proxy_index)
+        proxy_conn = (socks.SOCKS5, addr, int(port), True, username, password)
+        logging.info(f"{session_name} | Прокси: {addr}:{port}:{username}:{password}")
+    else:
+        addr, port = proxy.get_proxy(proxy_index)
+        proxy_conn = (socks.SOCKS5, addr, int(port), True)
+        logging.info(f"{session_name} | Прокси: {addr}:{port}")
+
 
     # Load the client from telethon.session file
     # We don't need to specify api, api_id or api_hash, it will use TelegramDesktop API by default.
