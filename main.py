@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 async def main(session_name):
     
-    session_path = os.path.join('sessions', session_name)
+    session_path = os.path.join(os.path.join('sessions', session_name, f"{session_name}.session"))
     api = API.TelegramDesktop.Generate()
     client = TelegramClient(session_path, api)
 
@@ -21,6 +21,21 @@ async def main(session_name):
 
 def start_func(session_name):
     asyncio.run(main(session_name))
+
+def rename_dirs():
+    directory_path = 'tdatas'
+
+    files = os.listdir(directory_path)
+
+    files.sort()
+
+    for index, file_name in enumerate(files, start=1):
+        new_file_name = f"tdata{index}"
+        old_file_path = os.path.join(directory_path, file_name)
+        new_file_path = os.path.join(directory_path, new_file_name)
+        os.rename(old_file_path, new_file_path)
+        print(f"Файл {file_name} был переименован в {new_file_name}")
+    
 
 def start():
     session_names = os.listdir("./sessions")
